@@ -7,12 +7,12 @@
 
 namespace rotation {
 namespace {
-// Deterministic integration cadence for stable controller behavior across frame rates.
+// Deterministic cadence for stable controller behavior across frame rates
 constexpr float kFixedDt = 1.0f / 60.0f;
 // Clamp extreme frame spikes
 constexpr float kMaxFrameTime = 0.25f;
-// Actuator-like saturation limit for commanded control torque
-constexpr float kTorqueLimit = 8.0f;
+// Internal control torque setting. Change for faster or slower de-tumbling
+constexpr float kTorqueLimit = 1.5f;
 
 float RandomFloat(float minValue, float maxValue) {
     const float randomUnit = static_cast<float>(GetRandomValue(0, 10000)) / 10000.0f;

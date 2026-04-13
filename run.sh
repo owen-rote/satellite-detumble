@@ -1,5 +1,4 @@
 #!/bin/bash
 
-cmake -S . -B build # Installs raylib
-cmake --build build
+cmake -S . -B build && cmake --build build
 ./build/rotation
