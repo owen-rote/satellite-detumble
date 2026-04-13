@@ -1,0 +1,103 @@
+#include "rotation/simulation.hpp"
+
+#include <algorithm>
+#include <cmath>
+
+#include "raymath.h"
+
+namespace rotation {
+namespace {
+constexpr float kFixedDt = 1.0f / 60.0f;
+constexpr float kMaxFrameTime = 0.25f;
+constexpr float kTorqueLimit = 8.0f;
+
+float RandomFloat(float minValue, float maxValue) {
+    const float randomUnit = static_cast<float>(GetRandomValue(0, 10000)) / 10000.0f;
+    return minValue + (maxValue - minValue) * randomUnit;
+}
+
+Vector3 ClampMagnitude(Vector3 value, float maxLength) {
+    const float length = Vector3Length(value);
+
+    if (length > maxLength && length > 0.0f) {
+        return Vector3Scale(value, maxLength / length);
+    }
+
+    return value;
+}
+
+Vector3 QuaternionErrorVector(Quaternion current, Quaternion target) {
+    Quaternion error = QuaternionMultiply(target, QuaternionInvert(current));
+
+    if (error.w < 0.0f) {
+        error.x = -error.x;
+        error.y = -error.y;
+        error.z = -error.z;
+        error.w = -error.w;
+    }
+
+    Vector3 axis = Vector3{1.0f, 0.0f, 0.0f};
+    float angle = 0.0f;
+    QuaternionToAxisAngle(error, &axis, &angle);
+
+    if (angle > PI) {
+        angle -= 2.0f * PI;
+    }
+
+    if (std::fabs(angle) < 0.0001f || Vector3LengthSqr(axis) < 0.0001f) {
+        return Vector3Zero();
+    }
+
+    return Vector3Scale(Vector3Normalize(axis), angle);
+}
+
+Quaternion IntegrateOrientation(Quaternion orientation, Vector3 angularVelocity, float dt) {
+    const float speed = Vector3Length(angularVelocity);
+
+    if (speed < 0.0001f) {
+        return orientation;
+    }
+
+    const Vector3 axis = Vector3Scale(angularVelocity, 1.0f / speed);
+    const Quaternion delta = QuaternionFromAxisAngle(axis, speed * dt);
+    return QuaternionNormalize(QuaternionMultiply(delta, orientation));
+}
+
+}  // namespace
+
+void ResetSimulation(SimulationState& state) {
+    state.orientation = QuaternionNormalize(QuaternionFromEuler(RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD),
+                                                                RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD),
+                                                                RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD)));
+
+    state.angularVelocity = Vector3{RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f)};
+
+    state.angularVelocityHistory.fill(0.0f);
+    state.historyIndex = 0;
+    state.accumulator = 0.0f;
+}
+
+void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, float frameTime) {
+    state.accumulator += std::min(frameTime, kMaxFrameTime);
+
+    while (state.accumulator >= kFixedDt) {
+        const Vector3 attitudeError = QuaternionErrorVector(state.orientation, targetOrientation);
+
+        const float proportionalGain = 10.0f;
+        const float dampingGain = 5.5f;
+
+        Vector3 commandedTorque = Vector3Add(Vector3Scale(attitudeError, proportionalGain),
+                                             Vector3Scale(state.angularVelocity, -dampingGain));
+
+        commandedTorque = ClampMagnitude(commandedTorque, kTorqueLimit);
+
+        state.angularVelocity = Vector3Add(state.angularVelocity, Vector3Scale(commandedTorque, kFixedDt));
+        state.orientation = IntegrateOrientation(state.orientation, state.angularVelocity, kFixedDt);
+
+        state.angularVelocityHistory[state.historyIndex] = Vector3Length(state.angularVelocity);
+        state.historyIndex = (state.historyIndex + 1) % kGraphSamples;
+        state.accumulator -= kFixedDt;
+    }
+}
+
+}  // namespace rotation
