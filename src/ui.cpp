@@ -6,6 +6,7 @@
 
 namespace rotation {
 void DrawHud(Vector3 angularVelocity) {
+    // Status card
     DrawRectangle(16, 16, 470, 172, Fade(SKYBLUE, 0.18f));
     DrawText("Satellite De-Tumble Demo", 28, 28, 26, DARKBLUE);
     DrawText("Fixed-step update: 60 Hz", 28, 60, 20, DARKGRAY);
@@ -16,7 +17,7 @@ void DrawHud(Vector3 angularVelocity) {
 }
 
 void DrawVelocityGraph(const std::array<float, 240>& history, int nextIndex, float maxSpeed) {
-    const Rectangle bounds = {860.0f, 24.0f, 390.0f, 180.0f};
+    const Rectangle bounds = {860.0f, 24.0f, 390.0f, 180.0f};  // anchored to the upper-right corner.
 
     DrawRectangleRounded(bounds, 0.08f, 12, Fade(DARKBLUE, 0.12f));
     DrawRectangleLinesEx(bounds, 1.0f, Fade(DARKBLUE, 0.35f));
@@ -30,6 +31,7 @@ void DrawVelocityGraph(const std::array<float, 240>& history, int nextIndex, flo
     const float height = bottom - top;
     const float width = right - left;
 
+    // Cartesian plot frame and horizontal guide lines for quick trend reading
     DrawLine(static_cast<int>(left), static_cast<int>(bottom), static_cast<int>(right), static_cast<int>(bottom),
              Fade(BLACK, 0.35f));
     DrawLine(static_cast<int>(left), static_cast<int>(top), static_cast<int>(left), static_cast<int>(bottom),
@@ -41,8 +43,10 @@ void DrawVelocityGraph(const std::array<float, 240>& history, int nextIndex, flo
                  Fade(DARKGRAY, 0.15f));
     }
 
+    // keep graph scale reasonable
     const float clampedMax = std::max(maxSpeed, 0.1f);
 
+    // history graph loop
     for (int sample = 1; sample < 240; ++sample) {
         const int previousIndex = (nextIndex + sample - 1) % 240;
         const int currentIndex = (nextIndex + sample) % 240;

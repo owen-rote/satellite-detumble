@@ -7,8 +7,11 @@
 
 namespace rotation {
 namespace {
+// Deterministic integration cadence for stable controller behavior across frame rates.
 constexpr float kFixedDt = 1.0f / 60.0f;
+// Clamp extreme frame spikes
 constexpr float kMaxFrameTime = 0.25f;
+// Actuator-like saturation limit for commanded control torque
 constexpr float kTorqueLimit = 8.0f;
 
 float RandomFloat(float minValue, float maxValue) {
@@ -27,8 +30,10 @@ Vector3 ClampMagnitude(Vector3 value, float maxLength) {
 }
 
 Vector3 QuaternionErrorVector(Quaternion current, Quaternion target) {
+    // Right-multiply by inverse(current) to get target-in-current attitude error.
     Quaternion error = QuaternionMultiply(target, QuaternionInvert(current));
 
+    // Enforce shortest-arc representation (q and -q encode identical rotation).
     if (error.w < 0.0f) {
         error.x = -error.x;
         error.y = -error.y;
@@ -44,6 +49,7 @@ Vector3 QuaternionErrorVector(Quaternion current, Quaternion target) {
         angle -= 2.0f * PI;
     }
 
+    // Guard axis-angle noise near zero rotation to avoid normalization artifacts.
     if (std::fabs(angle) < 0.0001f || Vector3LengthSqr(axis) < 0.0001f) {
         return Vector3Zero();
     }
@@ -58,6 +64,7 @@ Quaternion IntegrateOrientation(Quaternion orientation, Vector3 angularVelocity,
         return orientation;
     }
 
+    // Increment attitude with exponential map, then renormalize to limit drift.
     const Vector3 axis = Vector3Scale(angularVelocity, 1.0f / speed);
     const Quaternion delta = QuaternionFromAxisAngle(axis, speed * dt);
     return QuaternionNormalize(QuaternionMultiply(delta, orientation));
@@ -66,10 +73,12 @@ Quaternion IntegrateOrientation(Quaternion orientation, Vector3 angularVelocity,
 }  // namespace
 
 void ResetSimulation(SimulationState& state) {
+    // Start from a broad random attitude
     state.orientation = QuaternionNormalize(QuaternionFromEuler(RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD),
                                                                 RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD),
                                                                 RandomFloat(-120.0f * DEG2RAD, 120.0f * DEG2RAD)));
 
+    // Seed initial tumble rate
     state.angularVelocity = Vector3{RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f)};
 
     state.angularVelocityHistory.fill(0.0f);
@@ -83,6 +92,7 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
     while (state.accumulator >= kFixedDt) {
         const Vector3 attitudeError = QuaternionErrorVector(state.orientation, targetOrientation);
 
+        // PD law: P term drives attitude error to zero, D term damps angular rate.
         const float proportionalGain = 10.0f;
         const float dampingGain = 5.5f;
 
@@ -91,6 +101,7 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
 
         commandedTorque = ClampMagnitude(commandedTorque, kTorqueLimit);
 
+        // Unit inertia assumption: angular acceleration equals applied torque.
         state.angularVelocity = Vector3Add(state.angularVelocity, Vector3Scale(commandedTorque, kFixedDt));
         state.orientation = IntegrateOrientation(state.orientation, state.angularVelocity, kFixedDt);
 
