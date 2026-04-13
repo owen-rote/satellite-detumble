@@ -26,6 +26,7 @@ Press `R` to randomize.
 ## Build
 
 ```bash
-cmake -S . -B build && cmake --build build
+# Linux
+cmake -S . -B build && cmake --build build  # (also fetches raylib)
 ./build/rotation
 ```
