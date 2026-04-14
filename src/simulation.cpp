@@ -16,6 +16,10 @@ constexpr float kTorqueLimit = 1.5f;
 // Principal moments of inertia (kg*m^2) per axis.
 // Uneven to simulation an asymmetrical satellite
 constexpr Vector3 kInertiaPrincipal = {1.0f, 2.5f, 0.8f};
+// Simulated gyro noise magnitude in rad/s added to each axis each step.
+constexpr float kGyroNoiseAmplitude = 0.25f;
+// filter alpha
+constexpr float kFilterAlpha = 0.85f;
 
 float RandomFloat(float minValue, float maxValue) {
     const float randomUnit = static_cast<float>(GetRandomValue(0, 10000)) / 10000.0f;
@@ -84,7 +88,9 @@ void ResetSimulation(SimulationState& state) {
     // Seed initial tumble rate
     state.angularVelocity = Vector3{RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f), RandomFloat(-3.0f, 3.0f)};
 
+    state.angularVelocityEstimate = Vector3Zero();
     state.angularVelocityHistory.fill(0.0f);
+    state.angularVelocityEstimateHistory.fill(0.0f);
     state.historyIndex = 0;
     state.accumulator = 0.0f;
 }
@@ -95,12 +101,24 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
     while (state.accumulator >= kFixedDt) {
         const Vector3 attitudeError = QuaternionErrorVector(state.orientation, targetOrientation);
 
+        // Simulate a noisy gyro reading, then smooth it with a low-pass filter.
+        // controller only sees estimate
+        const Vector3 noisyRate = {
+            state.angularVelocity.x + RandomFloat(-kGyroNoiseAmplitude, kGyroNoiseAmplitude),
+            state.angularVelocity.y + RandomFloat(-kGyroNoiseAmplitude, kGyroNoiseAmplitude),
+            state.angularVelocity.z + RandomFloat(-kGyroNoiseAmplitude, kGyroNoiseAmplitude),
+        };
+        state.angularVelocityEstimate = Vector3Add(
+            Vector3Scale(state.angularVelocityEstimate, kFilterAlpha),
+            Vector3Scale(noisyRate, 1.0f - kFilterAlpha));
+
         // PD law: P term drives attitude error to zero, D term damps angular rate.
+        // D term uses the filtered estimate rather than the true rate.
         const float proportionalGain = 10.0f;
         const float dampingGain = 5.5f;
 
         Vector3 commandedTorque = Vector3Add(Vector3Scale(attitudeError, proportionalGain),
-                                             Vector3Scale(state.angularVelocity, -dampingGain));
+                                             Vector3Scale(state.angularVelocityEstimate, -dampingGain));
 
         commandedTorque = ClampMagnitude(commandedTorque, kTorqueLimit);
 
@@ -118,6 +136,7 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
         state.orientation = IntegrateOrientation(state.orientation, state.angularVelocity, kFixedDt);
 
         state.angularVelocityHistory[state.historyIndex] = Vector3Length(state.angularVelocity);
+        state.angularVelocityEstimateHistory[state.historyIndex] = Vector3Length(state.angularVelocityEstimate);
         state.historyIndex = (state.historyIndex + 1) % kGraphSamples;
         state.accumulator -= kFixedDt;
     }

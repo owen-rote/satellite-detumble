@@ -64,8 +64,8 @@ int main() {
         EndMode3D();
 
         // draw info overlays
-        satellite_detumble::DrawHud(simulation.angularVelocity);
-        satellite_detumble::DrawVelocityGraph(simulation.angularVelocityHistory, simulation.historyIndex, 4.0f);
+        satellite_detumble::DrawHud(simulation.angularVelocity, simulation.angularVelocityEstimate);
+        satellite_detumble::DrawVelocityGraph(simulation.angularVelocityHistory, simulation.angularVelocityEstimateHistory, simulation.historyIndex, 4.0f);
 
         EndDrawing();
     }

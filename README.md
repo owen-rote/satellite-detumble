@@ -1,27 +1,32 @@
 # Satellite De-Tumble Demo
 
-Real-time 3D visualization of a PD attitude controller driving a tumbling satellite to a fixed target orientation. C++17 + [raylib](https://www.raylib.com/). 
+3D visualization of a PD attitude controller driving a tumbling satellite to a fixed target. C++17 + [raylib](https://www.raylib.com/).
+
+Implements:
+- Low-pass filtering of noisy angular velocity measurements
+- Quaternion-based attitude
+- Asymmetric inertia to simulate an asymmetric satellite
 
 Press `R` to randomize.
 
-![demo](demo.gif)
+![demo](docs/demo-with-filter.gif)
 
-## Control loop (per fixed step)
+## Control loop (60hz)
 
-1. Multiply target quaternion by the inverse of the current one to get the attitude error
-2. Convert that error quaternion to an axis-angle vector. Magnitude is how far off, direction is which way to rotate
-3. PD torque command: scale the error vector by Kp, subtract angular rate scaled by Kd
-4. Clamp torque magnitude to the actuator limit
-5. Add torque to angular velocity
-6. Rotate the current quaternion by the angular velocity delta, renormalize
+1. Get attitude error
+2. Add noise to angular rate, then low-pass filter
+3. PD torque: scale error by Kp, subtract filtered rate × Kd
+4. Get angular acceleration: `dw/dt = I^-1 * (T - w x (I*w))`
+5. Add angular acceleration to angular velocity
+6. Rotate quaternion by angular velocity delta, renormalize
 
 ## Code structure
 
 - `src/main.cpp` - Render loop, no math
-- `src/simulation.cpp` - dynamics, PD controller, quaternion integrator
+- `src/simulation.cpp` - dynamics
 - `src/ui.cpp` - HUD
-- `include/satellite-detumbe/simulation.hpp` - simulation state and dynamics API
-- `include/satellite-detumbe/ui.hpp` - rendering API
+- `include/satellite-detumble/simulation.hpp` - dynamics API
+- `include/satellite-detumble/ui.hpp` - rendering API
 
 ## Build
 

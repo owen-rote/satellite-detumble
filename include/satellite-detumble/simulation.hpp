@@ -12,10 +12,13 @@ constexpr int kGraphSamples = 240;
 struct SimulationState {
     // Body attitude
     Quaternion orientation = QuaternionIdentity();
-    // Body angular velocity vector in rad/s.
+    // True body angular velocity in rad/s (ground truth, not available to the controller).
     Vector3 angularVelocity = Vector3Zero();
-    // Magnitude history used by the HUD graph (circular buffer).
+    // Low-pass filtered gyro estimate fed to the controller.
+    Vector3 angularVelocityEstimate = Vector3Zero();
+    // True and estimated magnitude histories for the HUD graph
     std::array<float, kGraphSamples> angularVelocityHistory = {};
+    std::array<float, kGraphSamples> angularVelocityEstimateHistory = {};
     // Next write index into angularVelocityHistory.
     int historyIndex = 0;
     // Frame-time accumulator used to run a deterministic fixed-step update.
