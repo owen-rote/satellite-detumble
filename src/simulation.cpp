@@ -13,6 +13,9 @@ constexpr float kFixedDt = 1.0f / 60.0f;
 constexpr float kMaxFrameTime = 0.25f;
 // Internal control torque setting. Change for faster or slower de-tumbling
 constexpr float kTorqueLimit = 1.5f;
+// Principal moments of inertia (kg*m^2) per axis.
+// Uneven to simulation an asymmetrical satellite
+constexpr Vector3 kInertiaPrincipal = {1.0f, 2.5f, 0.8f};
 
 float RandomFloat(float minValue, float maxValue) {
     const float randomUnit = static_cast<float>(GetRandomValue(0, 10000)) / 10000.0f;
@@ -101,8 +104,17 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
 
         commandedTorque = ClampMagnitude(commandedTorque, kTorqueLimit);
 
-        // Unit inertia assumption: angular acceleration equals applied torque.
-        state.angularVelocity = Vector3Add(state.angularVelocity, Vector3Scale(commandedTorque, kFixedDt));
+        // Euler rotation: dw/dt = I^-1 * (T - w x (I*w))
+        //
+        // The w x (I*w) part is what makes rotation feel real—it links the axes together
+        // Without it, each axis spins on its own and you lose wobble/precession.
+        const Vector3 Iw = {kInertiaPrincipal.x * state.angularVelocity.x,
+                            kInertiaPrincipal.y * state.angularVelocity.y,
+                            kInertiaPrincipal.z * state.angularVelocity.z};
+        const Vector3 netTorque = Vector3Subtract(commandedTorque, Vector3CrossProduct(state.angularVelocity, Iw));
+        const Vector3 angularAccel = {netTorque.x / kInertiaPrincipal.x, netTorque.y / kInertiaPrincipal.y,
+                                      netTorque.z / kInertiaPrincipal.z};
+        state.angularVelocity = Vector3Add(state.angularVelocity, Vector3Scale(angularAccel, kFixedDt));
         state.orientation = IntegrateOrientation(state.orientation, state.angularVelocity, kFixedDt);
 
         state.angularVelocityHistory[state.historyIndex] = Vector3Length(state.angularVelocity);
