@@ -10,16 +10,16 @@ namespace satellite_detumble {
 constexpr int kGraphSamples = 240;
 
 struct SimulationState {
-	// Body attitude
-	Quaternion orientation = QuaternionIdentity();
-	// Body angular velocity vector in rad/s.
-	Vector3 angularVelocity = Vector3Zero();
-	// Magnitude history used by the HUD graph (circular buffer).
-	std::array<float, kGraphSamples> angularVelocityHistory = {};
-	// Next write index into angularVelocityHistory.
-	int historyIndex = 0;
-	// Frame-time accumulator used to run a deterministic fixed-step update.
-	float accumulator = 0.0f;
+    // Body attitude
+    Quaternion orientation = QuaternionIdentity();
+    // Body angular velocity vector in rad/s.
+    Vector3 angularVelocity = Vector3Zero();
+    // Magnitude history used by the HUD graph (circular buffer).
+    std::array<float, kGraphSamples> angularVelocityHistory = {};
+    // Next write index into angularVelocityHistory.
+    int historyIndex = 0;
+    // Frame-time accumulator used to run a deterministic fixed-step update.
+    float accumulator = 0.0f;
 };
 
 // Randomizes initial attitude/rate and clears graph/history state.

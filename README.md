@@ -20,13 +20,13 @@ Press `R` to randomize.
 - `src/main.cpp` - Render loop, no math
 - `src/simulation.cpp` - dynamics, PD controller, quaternion integrator
 - `src/ui.cpp` - HUD
-- `include/rotation/simulation.hpp` - simulation state and dynamics API
-- `include/rotation/ui.hpp` - rendering API
+- `include/satellite-detumbe/simulation.hpp` - simulation state and dynamics API
+- `include/satellite-detumbe/ui.hpp` - rendering API
 
 ## Build
 
 ```bash
 # Linux
 cmake -S . -B build && cmake --build build  # (also fetches raylib)
-./build/rotation
+./build/satellite-detumble
 ```
