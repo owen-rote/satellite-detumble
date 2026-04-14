@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
-#include "satellite-detumble/simulation.hpp"
-#include "satellite-detumble/ui.hpp"
+#include "simulation.hpp"
+#include "ui.hpp"
 
 namespace {
 constexpr int kScreenWidth = 1280;

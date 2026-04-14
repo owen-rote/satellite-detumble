@@ -1,4 +1,4 @@
-#include "satellite-detumble/ui.hpp"
+#include "ui.hpp"
 
 #include <algorithm>
 
@@ -63,4 +63,4 @@ void DrawVelocityGraph(const std::array<float, 240>& history, int nextIndex, flo
     DrawText("0.00", static_cast<int>(left), static_cast<int>(bottom) - 8, 16, DARKGRAY);
 }
 
-}  // namespace rotation
+}  // namespace satellite_detumble

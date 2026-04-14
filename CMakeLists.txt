@@ -31,14 +31,10 @@ add_executable(satellite-detumble
 
 target_include_directories(satellite-detumble PRIVATE include/satellite-detumble)
 
-target_link_libraries(rotation PRIVATE raylib)
+ 
 target_link_libraries(satellite-detumble PRIVATE raylib)
 
-if(MSVC)
-    target_compile_options(rotation PRIVATE /W4)
-else()
-    target_compile_options(rotation PRIVATE -Wall -Wextra -Wpedantic)
-endif()
+
 if(MSVC)
     target_compile_options(satellite-detumble PRIVATE /W4)
 else()

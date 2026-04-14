@@ -1,4 +1,4 @@
-#include "satellite-detumble/simulation.hpp"
+#include "simulation.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -111,4 +111,4 @@ void UpdateSimulation(SimulationState& state, Quaternion targetOrientation, floa
     }
 }
 
-}  // namespace rotation
+}  // namespace satellite_detumble
