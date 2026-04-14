@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(rotation LANGUAGES CXX)
+project(satellite-detumble LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -23,18 +23,24 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(raylib)
 
-add_executable(rotation
+add_executable(satellite-detumble
     src/main.cpp
     src/simulation.cpp
     src/ui.cpp
 )
 
-target_include_directories(rotation PRIVATE include)
+target_include_directories(satellite-detumble PRIVATE include/satellite-detumble)
 
 target_link_libraries(rotation PRIVATE raylib)
+target_link_libraries(satellite-detumble PRIVATE raylib)
 
 if(MSVC)
     target_compile_options(rotation PRIVATE /W4)
 else()
     target_compile_options(rotation PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+if(MSVC)
+    target_compile_options(satellite-detumble PRIVATE /W4)
+else()
+    target_compile_options(satellite-detumble PRIVATE -Wall -Wextra -Wpedantic)
 endif()

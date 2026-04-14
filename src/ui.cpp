@@ -1,10 +1,10 @@
-#include "rotation/ui.hpp"
+#include "satellite-detumble/ui.hpp"
 
 #include <algorithm>
 
 #include "raymath.h"
 
-namespace rotation {
+namespace satellite_detumble {
 void DrawHud(Vector3 angularVelocity) {
     // Status card
     DrawRectangle(16, 16, 470, 172, Fade(SKYBLUE, 0.18f));

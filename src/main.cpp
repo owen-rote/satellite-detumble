@@ -1,7 +1,7 @@
 #include "raylib.h"
 #include "raymath.h"
-#include "rotation/simulation.hpp"
-#include "rotation/ui.hpp"
+#include "satellite-detumble/simulation.hpp"
+#include "satellite-detumble/ui.hpp"
 
 namespace {
 constexpr int kScreenWidth = 1280;
@@ -25,21 +25,21 @@ int main() {
     Model cubeModel = LoadModelFromMesh(cubeMesh);
     cubeModel.materials[0].maps[MATERIAL_MAP_DIFFUSE].color = RED;
 
-    rotation::SimulationState simulation = {};
+    satellite_detumble::SimulationState simulation = {};
 
     // init target state as position and quaternion
     const Quaternion targetOrientation = QuaternionFromEuler(0.0f, 35.0f * DEG2RAD, 0.0f);
     const Vector3 cubePosition = Vector3{0.0f, 1.0f, 0.0f};
 
-    rotation::ResetSimulation(simulation);
+    satellite_detumble::ResetSimulation(simulation);
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_R)) {
             // Upon R: another random Attitude and velocity
-            rotation::ResetSimulation(simulation);
+            satellite_detumble::ResetSimulation(simulation);
         }
 
-        rotation::UpdateSimulation(simulation, targetOrientation, GetFrameTime());
+        satellite_detumble::UpdateSimulation(simulation, targetOrientation, GetFrameTime());
 
         // Convert quaternion to axis-angle because DrawModelEx expects that form.
         Vector3 drawAxis = Vector3{0.0f, 1.0f, 0.0f};
@@ -64,8 +64,8 @@ int main() {
         EndMode3D();
 
         // draw info overlays
-        rotation::DrawHud(simulation.angularVelocity);
-        rotation::DrawVelocityGraph(simulation.angularVelocityHistory, simulation.historyIndex, 4.0f);
+        satellite_detumble::DrawHud(simulation.angularVelocity);
+        satellite_detumble::DrawVelocityGraph(simulation.angularVelocityHistory, simulation.historyIndex, 4.0f);
 
         EndDrawing();
     }

@@ -1,11 +1,11 @@
-#include "rotation/simulation.hpp"
+#include "satellite-detumble/simulation.hpp"
 
 #include <algorithm>
 #include <cmath>
 
 #include "raymath.h"
 
-namespace rotation {
+namespace satellite_detumble {
 namespace {
 // Deterministic cadence for stable controller behavior across frame rates
 constexpr float kFixedDt = 1.0f / 60.0f;
