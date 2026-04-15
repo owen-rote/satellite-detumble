@@ -1,6 +1,6 @@
 # Satellite De-Tumble Demo
 
-3D visualization of a PD attitude controller driving a tumbling satellite to a fixed target. C++17 + [raylib](https://www.raylib.com/).
+3D visualization of a PD attitude controller driving a tumbling satellite. C++17 + [raylib](https://www.raylib.com/).
 
 Implements:
 - Low-pass filtering of noisy angular velocity measurements
